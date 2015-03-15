@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "nodos.h"
 
+//linea de prueba
 void imprimirEstado(int estado[]);
 void PushFrontera(Cola *primero, Cola *ultimo, Arbol nodo);
 Arbol PopFrontera(Cola *primero, Cola *ultimo);
