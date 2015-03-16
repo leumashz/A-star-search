@@ -51,64 +51,62 @@ int verificarEstado(int estado[], int otroEstado[]){
     return True;
 }
 
-void PushFrontera(Cola *primeroFrontera, Cola *ultimoFrontera, Arbol nodoArbol){
-    //se crea un nuevo nodo
-    Cola nuevo;
-    cFrontera++;
-    //se reserva espacio de memoria para ese nodo y se le asigna informacion
+//funciones Pop y Push para agregar los nodos explorados y los de frontera
+//se usa la estructura de datos: Cola ordenada
+void PushFrontera(Cola *cola, Arbol nodo) {
+    pNodo nuevo, anterior;
+
     nuevo = (Cola)malloc(sizeof(tipoNodo));
-    nuevo->nArbol = nodoArbol;
-    // el nuevo nodo se anexa al final
-    nuevo->siguiente = NULL;
-    //si el ultimo es nulo entonces apuntara a nuevo
-    if(*ultimoFrontera) (*ultimoFrontera)->siguiente = nuevo;
-    *ultimoFrontera = nuevo;
-    //si no hay ningun nodo en la cola, el nuevo nodo sera el primero y el ultimo a la vez
-    if(!*primeroFrontera) *primeroFrontera = nuevo;
+    nuevo->nArbol = nodo;
+
+    /* Si la cola esta vacia, el elemento agregado era el primero */
+    if(colaVacia(*cola) || (*cola)->nArbol->h > nodo->nArbol->h) {
+        /* Añadimos la lista a continuación del nuevo nodo */
+        nuevo->siguiente = *cola;
+        /* Ahora, el comienzo de nuestra lista es en nuevo nodo */
+        *cola = nuevo;
+    } else {
+        /* Buscar el nodo con la heuristica menor */
+        anterior = *cola;
+        /* Avanzamos hasta el último elemento o hasta que el siguiente tenga
+           un valor mayor que la heristica del nodo que queremos ingresar a la cola */
+        while(anterior->siguiente && anterior->siguiente->nArbol->h <= nodo->nArbol->h)
+            anterior = anterior->siguiente;
+        /* Insertamos el nuevo nodo después del nodo anterior */
+        nuevo->siguiente = anterior->siguiente;
+        anterior->siguiente = nuevo;
+    }
 }
 
-Arbol PopFrontera(Cola *primeroFrontera, Cola *ultimoFrontera){
-    // se crea un nodo aux y otro para manejar la cola
-    Cola nodo,aux=NULL;
-    cFrontera--;
-    // nodo recibe la cola
-    nodo = *primeroFrontera;
-    //si la cola esta vacia se retorna null
-    if(!nodo) return NULL;
-    // si tiene algo se desliga de la cola y se retorna
-    *primeroFrontera = nodo->siguiente;
-    aux=nodo;
-    if(!*primeroFrontera) *ultimoFrontera = NULL;
-    return aux->nArbol;
-}
 
-void PushExplorados(Pila *pilaExplorados, Arbol expandido){
+
+void Push(Cola *cola, Arbol nodo){
     //se crea un nuevo nodo;
     Pila nuevo;
-    cExplorados++;
     //se reserva el espacio en memoria para el nodo
-    nuevo = (Pila)malloc(sizeof(tipoNodo));
+    nuevo = (Cola)malloc(sizeof(tipoNodo));
     //se asigna los datos del individuo al nodo
-    nuevo->nArbol = expandido;
-    //ahora siguiente apunta inicio de la pila
-    nuevo->siguiente = *pilaExplorados;
-    // la pila apunta al nuevo nodo y este queda en la cima
-    *pilaExplorados = nuevo;
+    nuevo->nArbol = nodo;
+    //ahora siguiente apunta inicio de la cola
+    nuevo->siguiente = *cola;
+    // la cola apunta al nuevo nodo y este queda en la cima
+    *cola = nuevo;
 }
 
-Arbol PopExplorados(Pila *pilaExplorados){
+
+Arbol Pop(Cola *cola){
     // se crean dos nodos
-    Pila nodo,aux = NULL;
-    cFrontera--;
-    // el auxiliar recibe la pila al igual que nodo
-    aux=*pilaExplorados;
-    nodo = *pilaExplorados;
-    //si la pila esta vacia se retorna NULL
+    Cola nodo,aux = NULL;
+    // el auxiliar recibe la cola al igual que nodo
+    aux=*cola;
+    nodo = *cola;
+    //si la cola esta vacia se retorna NULL
     if(!nodo) return 0;
-    //si existe algo en la pila, el penultimo nodo pasa a ser el ultimo y se retorna el nodo aux
-    *pilaExplorados = nodo->siguiente;
+    //si existe algo en la cola, el penultimo nodo pasa a ser el ultimo y se retorna el nodo aux
+    *cola = nodo->siguiente;
     return aux->nArbol;
 }
+//////////////////////////////////////////////////////////////////////////
 
 int *moverPuzzle(int estado[], movimiento accion){
     int ubicacion = buscarCero(estado);
