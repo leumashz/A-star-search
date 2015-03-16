@@ -319,38 +319,36 @@ Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]){
 }
 
 int busquedaA_estrella(int estado[]){
-    int i,j,e[casillas];
+    int i;
     Arbol nodo = NULL;
     Arbol hijo = NULL;
-    //Cola acciones = NULL;
     movimiento m;
-    // estructura auxiliares para el control la busqueda
+    // estructuras auxiliares para implementar busqueda grafo
     Cola frontera = NULL;
     Cola Explorados = NULL;
-    //Pila pilaExplorados = NULL;
     // se crea el primer nodo (Padre)
     nodo = crearNodo(NULL,izquierda,0,estado);
-
-    if(verificarEstado(nodo->estado,solucion) == True){
-        printf("El estado inicial era la solucion");
-        imprimirEstado(nodo->estado);
-        printf("\nEl costo fue de %d\n", nodo->costo);
-        return True;
-    }
+    // mostramos el estado inicial por pantalla
     printf("Estado Inicial");
     imprimirEstado(nodo->estado);
+    // comprobamos si el nodo inicial es la solucion o no
+    if(verificarEstado(nodo->estado,solucion) == True){
+        printf("\nSolucion encontrada\n", );
+        printf("\nSe llego al nivel %d\n", nodo->costo);
+        return True;
+    }
+    // ingresamos el nodo a la frontera
     PushFrontera(&frontera, nodo);
 
-    while(true){
+    do{
         if(frontera == NULL)
             return False;
-
         //sacamos un nodo de la frontera
         nodo = Pop(&frontera);
 
-        //agregamos el nodo al  conjunto de explorados
+        //agregamos el nodo sacado de frontera al conjunto de explorados
         Push(&Explorados, nodo);
-
+        // para cada acción creamos un hijo
         for(i = 0; i < 4; i++){
             if(i==0) m = arriba;
             if(i==1) m = abajo;
@@ -365,42 +363,15 @@ int busquedaA_estrella(int estado[]){
                     printf("\n-----------------------------------------------------------\n");
                     printf("\n frontera + explorados =  %d nodos\n", cFrontera + cExplorados);
                     printf("\n Se llego al nivel %d\n", hijo->costo);
-                    printf("\n Acciones para llegar del estado inicial al estado meta\n");
                     printf("\n-----------------------------------------------------------\n");
-                    /*while(hijo->padre != NULL){
-
-                        PushExplorados(&acciones, hijo);
-                        hijo = hijo->padre;
-                    }*/
-                    /*while(acciones){
-                        nodo = PopExplorados(&acciones);
-                        if(nodo->accion == izquierda){
-                            printf("\nizquierda\n");
-                            imprimirEstado(nodo->estado);
-                        }
-                        if(nodo->accion == derecha){
-                            printf("\nderecha\n");
-                            imprimirEstado(nodo->estado);
-                        }
-                        if(nodo->accion == arriba){
-                            printf("\narriba\n");
-                            imprimirEstado(nodo->estado);
-                        }
-                        if(nodo->accion == abajo){
-                            printf("\nabajo\n");
-                            imprimirEstado(nodo->estado);
-                        }
-                    }*/
-
                     return True;
                 }
                 else{
                     PushFrontera(&frontera,hijo);
-                    //imprimirEstado(hijo->estado);
                 }
             }
         }
-    }
+    }while(frontera != NULL);
     return False;
 }
 
