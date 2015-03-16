@@ -315,6 +315,8 @@ Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]){
     nodo->padre = padre;
     nodo->accion = accion;
     nodo->costo = (int)padre->costo + 1; //1 es el costo del nuevo estado
+    nodo->h = DistanciaManhattan(nodo->estado) + nodo->costo; // el valor de la heuristica es igual a la distancia manhattan + el costo del nodo
+    //nodo->h = fueraDeLugar(nodo->estado) + nodo->costo; // el valor de la heuristica es igual a la cantidad de cuadros fuera de lugar + el costo del nodo
     return nodo;
 }
 
