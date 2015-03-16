@@ -9,10 +9,11 @@ enum movimiento{arriba = 3,abajo,izquierda,derecha,inicio};
 
 //Nodo para la estructura tipo  arbol
 typedef struct _nodo {
-   int estado[casillas];
-   int costo;
-   movimiento accion;
-   struct _nodo    *padre;
+    int estado[casillas];
+    int costo;
+    int h;
+    movimiento accion;
+    struct _nodo    *padre;
 } tipoNodoArbol;
 typedef tipoNodoArbol *Arbol;
 
@@ -25,7 +26,7 @@ typedef struct nodo{
 
 typedef tipoNodo *Cola;
 
-typedef tipoNodo *Pila;
+//typedef tipoNodo *Pila;
 typedef tipoNodo *pNodo;
 
 
