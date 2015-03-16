@@ -106,6 +106,11 @@ Arbol Pop(Cola *cola){
     *cola = nodo->siguiente;
     return aux->nArbol;
 }
+
+int colaVacia(Cola c) {
+    return (c == NULL);
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 int *moverPuzzle(int estado[], movimiento accion){
@@ -418,4 +423,27 @@ void limpiarPila(Pila *p){
     if(temp->siguiente)
         limpiarPila(&temp->siguiente);
     free(temp);
+}
+
+//funcion para verificar si el estado inicial dado tiene solucion, recibe como parametro un arreglo entero (estado)
+int tieneSolucion(int estado[]){
+    int i,j;
+    int inversiones = 0;
+    printf("Verificando el estado siguiente\n");
+    imprimirEstado(estado);
+    /*for que compara si el elemento de la izquierda es mayor al de la derecha,
+     en dado de que sea así se aumenta el contador de inversiones*/
+    for(i = 0; i < casillas; i++){
+        for(j = i + 1; j < casillas; j++){
+            if(estado[j] > estado[i])
+                inversiones++;
+        }
+    }
+    /*debido a que el numero de casillas del tablero es impar
+    la solucion tiene un numero de inversiones par
+    */
+    if (inversiones%2 == 0){
+        return True;
+    }
+    return False
 }
