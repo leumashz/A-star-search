@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+//#include <math.h>
 #include "nodos.h"
 
 //funciones propias del puzzle
@@ -16,7 +16,7 @@ int buscarExplorados(Cola Explorados,int estado[]);
 int buscarFrontera(Cola frontera, int estado[]);
 
 //funciones para el manejo de las estructura de datos
-Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]);
+Arbol crearNodo(Arbol padre,movimiento accion, int estado[]);
 void PushFrontera(Cola *cola, Arbol nodo);
 void Push(Cola *cola, Arbol nodo);
 Arbol Pop(Cola *cola);
@@ -37,8 +37,22 @@ int nodosCreados = 0;
 int solucion[casillas] = {1,2,3,4,5,6,7,8,0};
 
 int main(void){
-    int estado[casillas]={1,5,3,8,0,6,4,7,2};
+    //Estados con solucion
+    //int estado[casillas] = {1,2,3,4,0,6,5,8,7};
+    //int estado[casillas] = {1,8,2,0,4,3,7,6,5};
+
+    //Estados sin solucion
+    //int estado[casillas] = {5,1,8,0,2,3,4,6,7};
+    int estado[casillas] = {8,1,2,0,4,3,7,6,5};
+
     printf("\n8 puzzle - Busqueda por Amplitud\n\n");
+    if(tieneSolucion(estado) == False){
+        printf("\nEl estado generado no tiene solucion\n");
+        return 0;
+    }
+
+    printf("\nEl estado inicial si tiene solucion\n");
+    system("PAUSE");
     busquedaA_estrella(estado);
     return 0;
 }
@@ -290,7 +304,7 @@ int *intercambiar(int n1, int n2, int estado[]){
     return estado;
 }
 
-Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]){
+Arbol crearNodo(Arbol padre,movimiento accion, int estado[]){
     Arbol nodo = NULL;
     int *temp;
     int temp2[casillas];
@@ -315,8 +329,9 @@ Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]){
     nodo->padre = padre;
     nodo->accion = accion;
     nodo->costo = (int)padre->costo + 1; //1 es el costo del nuevo estado
-    nodo->h = DistanciaManhattan(nodo->estado) + nodo->costo; // el valor de la heuristica es igual a la distancia manhattan + el costo del nodo
-    //nodo->h = fueraDeLugar(nodo->estado) + nodo->costo; // el valor de la heuristica es igual a la cantidad de cuadros fuera de lugar + el costo del nodo
+    // Implementacion de las dos heuristicas, comentar o descomentar para probar una
+    //nodo->h = DistanciaManhattan(nodo->estado) + nodo->costo; // el valor de la heuristica es igual a la distancia manhattan + el costo del nodo
+    nodo->h = fueraDeLugar(nodo->estado) + nodo->costo; // el valor de la heuristica es igual a la cantidad de cuadros fuera de lugar + el costo del nodo
     return nodo;
 }
 
@@ -329,7 +344,7 @@ int busquedaA_estrella(int estado[]){
     Cola frontera = NULL;
     Cola Explorados = NULL;
     // se crea el primer nodo (Padre)
-    nodo = crearNodo(NULL,izquierda,0,estado);
+    nodo = crearNodo(NULL,izquierda,estado);
     // mostramos el estado inicial por pantalla
     printf("Estado Inicial");
     imprimirEstado(nodo->estado);
@@ -357,15 +372,18 @@ int busquedaA_estrella(int estado[]){
             if(i==2) m = izquierda;
             if(i==3) m = derecha;
 
-            hijo = crearNodo(nodo,m,nodo->costo,nodo->estado);
+            hijo = crearNodo(nodo,m,nodo->estado);
+            nodosCreados++;
             if(buscarExplorados(Explorados,hijo->estado) == False && buscarFrontera(frontera,hijo->estado) == False){
                 if(verificarEstado(hijo->estado,solucion) == True){
                     printf("\n-----------------------------------------------------------\n");
                     printf("\n Se ha encontrado una solucion\n");
                     printf("\n-----------------------------------------------------------\n");
-                    printf("\n frontera + explorados =  %d nodos\n", cFrontera + cExplorados);
+                    //printf("\n frontera + explorados =  %d nodos\n", cFrontera + cExplorados);
                     printf("\n Se llego al nivel %d\n", hijo->costo);
+                    printf("\n Se Crearon %d nodos\n", nodosCreados);
                     printf("\n-----------------------------------------------------------\n");
+                    imprimirEstado(hijo->estado);
                     return True;
                 }
                 else{
@@ -404,30 +422,26 @@ int buscarFrontera(Cola frontera, int estado[]){
     return False;
 }
 
-void limpiarC(Cola *c){
-    Cola temp = *c;
-    if(temp->siguiente)
-        limpiarC(&temp->siguiente);
-    free(temp);
-}
-
 //funcion para verificar si el estado inicial dado tiene solucion, recibe como parametro un arreglo entero (estado)
 int tieneSolucion(int estado[]){
     int i,j;
     int inversiones = 0;
-    printf("Verificando el estado siguiente\n");
-    imprimirEstado(estado);
+    //printf("Verificando el estado siguiente\n");
+    //imprimirEstado(estado);
     /*for que compara si el elemento de la izquierda es mayor al de la derecha,
      en dado de que sea así se aumenta el contador de inversiones*/
-    for(i = 0; i < casillas; i++){
-        for(j = i + 1; j < casillas; j++){
-            if(estado[j] > estado[i])
-                inversiones++;
+    for(i = 0; i < casillas-1; i++){
+        for(j = i+1; j < casillas; j++){
+           if(estado[i] != 0 && estado[j] != 0 && estado[i] > estado[j]){
+               inversiones++;
+           }
         }
     }
     /*debido a que el numero de casillas del tablero es impar
     la solucion tiene un numero de inversiones par
     */
+    printf("\nInversiones %d\n", inversiones);
+    system("PAUSE");
     if (inversiones%2 == 0){
         return True;
     }
