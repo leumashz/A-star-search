@@ -4,28 +4,34 @@
 
 //linea de prueba
 void imprimirEstado(int estado[]);
-void PushFrontera(Cola *primero, Cola *ultimo, Arbol nodo);
-Arbol PopFrontera(Cola *primero, Cola *ultimo);
-void PushExplorados(Pila *pilaExplorados, Arbol expandido);
-Arbol PopExplorados(Pila *pilaExplorados);
+void PushFrontera(Cola *cola, Arbol nodo);
+void Push(Cola *cola, Arbol nodo);
+Arbol Pop(Cola *cola);
+int colaVacia(Cola c);
 
-void copiar(int estadoOrigen[], int *estadoDestino);
 int verificarEstado(int estado[], int otroEstado[]);
 int *moverPuzzle(int estado[], movimiento accion);
 int buscarCero(int estado[]);
 int *intercambiar(int n1, int n2, int estado[]);
 Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]);
-int busquedaGrafo(int estado[]);
-int buscarExplorados(Pila pilaExplorados,int estado[]);
-int buscarFrontera(Cola fronteraInicio, int estado[]);
+int busquedaA_estrella(int estado[]);
+int buscarExplorados(Cola Explorados,int estado[]);
+int buscarFrontera(Cola frontera, int estado[]);
+int fueraDeLugar(int estado[]);
+int tieneSolucion(int estado[]);
+
+
 
 int cFrontera = 0;
 int cExplorados = 0;
+int nodosCreados = 0;
+
+int solucion[casillas] = {1,2,3,4,5,6,7,8,0};
 
 int main(void){
     int estado[casillas]={1,5,3,8,0,6,4,7,2};
     printf("\n8 puzzle - Busqueda por Amplitud\n\n");
-    busquedaGrafo(estado);
+    busquedaA_estrella(estado);
     return 0;
 }
 
@@ -60,7 +66,7 @@ void PushFrontera(Cola *cola, Arbol nodo) {
     nuevo->nArbol = nodo;
 
     /* Si la cola esta vacia, el elemento agregado era el primero */
-    if(colaVacia(*cola) || (*cola)->nArbol->h > nodo->nArbol->h) {
+    if(colaVacia(*cola) || (*cola)->nArbol->h > nodo->h) {
         /* Añadimos la lista a continuación del nuevo nodo */
         nuevo->siguiente = *cola;
         /* Ahora, el comienzo de nuestra lista es en nuevo nodo */
@@ -70,7 +76,7 @@ void PushFrontera(Cola *cola, Arbol nodo) {
         anterior = *cola;
         /* Avanzamos hasta el último elemento o hasta que el siguiente tenga
            un valor mayor que la heristica del nodo que queremos ingresar a la cola */
-        while(anterior->siguiente && anterior->siguiente->nArbol->h <= nodo->nArbol->h)
+        while(anterior->siguiente && anterior->siguiente->nArbol->h <= nodo->h)
             anterior = anterior->siguiente;
         /* Insertamos el nuevo nodo después del nodo anterior */
         nuevo->siguiente = anterior->siguiente;
@@ -82,7 +88,7 @@ void PushFrontera(Cola *cola, Arbol nodo) {
 
 void Push(Cola *cola, Arbol nodo){
     //se crea un nuevo nodo;
-    Pila nuevo;
+    Cola nuevo;
     //se reserva el espacio en memoria para el nodo
     nuevo = (Cola)malloc(sizeof(tipoNodo));
     //se asigna los datos del individuo al nodo
@@ -304,17 +310,16 @@ Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]){
     return nodo;
 }
 
-int busquedaGrafo(int estado[]){
-    int solucion[casillas] = {1,2,3,4,5,6,7,8,0};
+int busquedaA_estrella(int estado[]){
     int i,j,e[casillas];
     Arbol nodo = NULL;
     Arbol hijo = NULL;
-    Pila acciones = NULL;
+    //Cola acciones = NULL;
     movimiento m;
     // estructura auxiliares para el control la busqueda
-    Cola fronteraInicio = NULL;
-    Cola fronteraFinal = NULL;
-    Pila pilaExplorados = NULL;
+    Cola frontera = NULL;
+    Cola Explorados = NULL;
+    //Pila pilaExplorados = NULL;
     // se crea el primer nodo (Padre)
     nodo = crearNodo(NULL,izquierda,0,estado);
 
@@ -326,17 +331,17 @@ int busquedaGrafo(int estado[]){
     }
     printf("Estado Inicial");
     imprimirEstado(nodo->estado);
-    PushFrontera(&fronteraInicio, &fronteraFinal, nodo);
+    PushFrontera(&frontera, nodo);
 
     while(true){
-        if(fronteraInicio == NULL)
+        if(frontera == NULL)
             return False;
 
         //sacamos un nodo de la frontera
-        nodo = PopFrontera(&fronteraInicio, &fronteraFinal);
+        nodo = Pop(&frontera);
 
         //agregamos el nodo al  conjunto de explorados
-        PushExplorados(&pilaExplorados, nodo);
+        Push(&Explorados, nodo);
 
         for(i = 0; i < 4; i++){
             if(i==0) m = arriba;
@@ -345,7 +350,7 @@ int busquedaGrafo(int estado[]){
             if(i==3) m = derecha;
 
             hijo = crearNodo(nodo,m,nodo->costo,nodo->estado);
-            if(buscarExplorados(pilaExplorados,hijo->estado) == False && buscarFrontera(fronteraInicio,hijo->estado) == False){
+            if(buscarExplorados(Explorados,hijo->estado) == False && buscarFrontera(frontera,hijo->estado) == False){
                 if(verificarEstado(hijo->estado,solucion) == True){
                     printf("\n-----------------------------------------------------------\n");
                     printf("\n Se ha encontrado una solucion\n");
@@ -382,7 +387,7 @@ int busquedaGrafo(int estado[]){
                     return True;
                 }
                 else{
-                    PushFrontera(&fronteraInicio,&fronteraFinal,hijo);
+                    PushFrontera(&frontera,hijo);
                     //imprimirEstado(hijo->estado);
                 }
             }
@@ -391,8 +396,8 @@ int busquedaGrafo(int estado[]){
     return False;
 }
 
-int buscarExplorados(Pila pilaExplorados, int estado[]){
-    Pila nodo = pilaExplorados;
+int buscarExplorados(Cola Explorados, int estado[]){
+    Cola nodo = Explorados;
     if(nodo == NULL)
         return False;
     while(nodo){
@@ -405,8 +410,8 @@ int buscarExplorados(Pila pilaExplorados, int estado[]){
 }
 
 
-int buscarFrontera(Cola fronteraInicio, int estado[]){
-    Cola nodo = fronteraInicio;
+int buscarFrontera(Cola frontera, int estado[]){
+    Cola nodo = frontera;
     if(nodo == NULL)
         return False;
     while(nodo){
@@ -418,10 +423,10 @@ int buscarFrontera(Cola fronteraInicio, int estado[]){
     return False;
 }
 
-void limpiarPila(Pila *p){
-    Pila temp = *p;
+void limpiarC(Cola *c){
+    Cola temp = *c;
     if(temp->siguiente)
-        limpiarPila(&temp->siguiente);
+        limpiarC(&temp->siguiente);
     free(temp);
 }
 
@@ -445,5 +450,18 @@ int tieneSolucion(int estado[]){
     if (inversiones%2 == 0){
         return True;
     }
-    return False
+    return False;
+}
+
+//funcion para calcular la heuristica acerca del numero de cuadros fuera de su posicion en el estado meta
+int fueraDeLugar(int estado[]){
+    int sumFueraLugar = 0;
+    int i, j;
+    /*si el elemento i del estado dado es diferente al elemento i de la solucion
+    se aumenta la suma de elementos fuera de su lugar */
+    for(i = 0; i < casillas; i++){
+        if(estado[i] != solucion[i])
+            sumFueraLugar++;
+    }
+    return sumFueraLugar;
 }
