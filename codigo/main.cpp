@@ -333,7 +333,7 @@ int busquedaA_estrella(int estado[]){
     imprimirEstado(nodo->estado);
     // comprobamos si el nodo inicial es la solucion o no
     if(verificarEstado(nodo->estado,solucion) == True){
-        printf("\nSolucion encontrada\n", );
+        printf("\nSolucion encontrada\n");
         printf("\nSe llego al nivel %d\n", nodo->costo);
         return True;
     }
