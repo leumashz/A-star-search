@@ -1,25 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "nodos.h"
 
-//linea de prueba
+//funciones propias del puzzle
 void imprimirEstado(int estado[]);
+int verificarEstado(int estado[], int otroEstado[]);
+int *moverPuzzle(int estado[], movimiento accion);
+int buscarCero(int estado[]);
+int *intercambiar(int n1, int n2, int estado[]);
+
+//funciones de busqueda
+int busquedaA_estrella(int estado[]);
+int buscarExplorados(Cola Explorados,int estado[]);
+int buscarFrontera(Cola frontera, int estado[]);
+
+//funciones para el manejo de las estructura de datos
+Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]);
 void PushFrontera(Cola *cola, Arbol nodo);
 void Push(Cola *cola, Arbol nodo);
 Arbol Pop(Cola *cola);
 int colaVacia(Cola c);
 
-int verificarEstado(int estado[], int otroEstado[]);
-int *moverPuzzle(int estado[], movimiento accion);
-int buscarCero(int estado[]);
-int *intercambiar(int n1, int n2, int estado[]);
-Arbol crearNodo(Arbol padre,movimiento accion, int costo, int estado[]);
-int busquedaA_estrella(int estado[]);
-int buscarExplorados(Cola Explorados,int estado[]);
-int buscarFrontera(Cola frontera, int estado[]);
-int fueraDeLugar(int estado[]);
+//funcion para calcular si un estado dado tiene solución
 int tieneSolucion(int estado[]);
 
+//funciones para calcular heuristicas
+int DistanciaManhattan(int estado[]);
+int fueraDeLugar(int estado[]);
 
 
 int cFrontera = 0;
@@ -464,4 +472,32 @@ int fueraDeLugar(int estado[]){
             sumFueraLugar++;
     }
     return sumFueraLugar;
+}
+
+/*funcion para calcular la distancia del elemento i de un estado con respecto a su posición en el
+ estado solución (Distancia Manhattan), solo nos podemos mover horizoltal y verticalmente*/
+int DistanciaManhattan(int estado[]){
+    int sumDistanciaM = 0;
+    int i, disM = 0;
+    /*se calcula cual es la distancia del elemento i en el estado dado para llegar a la posicion correcta
+     en el estado solución*/
+    for(i = 0; i < casillas; i++){
+        if(estado[i] != solucion[i]){
+            //si tenemos 0 en una casilla y no estamos en la iteracion 8, tomamos 9 para obtener un resultado real
+            if(i != 8 && estado[i] == 0){
+                disM = abs(9 - solucion[i]);
+            }
+                //si estamos en la iteracion 8 y no tenemos 0 en la casilla 8, tomamos 9 para obtener un resultado real
+            else if(i == 8 && estado[8] != 0){
+                disM= abs(9 - estado[i]);
+            }
+                /*Para cualquier otro caso la distancia Manhattan es el valor absoluto de la resta de
+                la casilla i del estado dado con la casilla i de la solucion*/
+            else{
+                disM = abs(estado[i] - solucion[i]);
+            }
+            sumDistanciaM += disM;
+        }
+    }
+    return sumDistanciaM;
 }
