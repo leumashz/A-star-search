@@ -371,7 +371,7 @@ int busquedaA_estrella(int estado[]){
                 }
             }
         }
-    }while(frontera != NULL);
+    }while(True);
     return False;
 }
 
