@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <math.h>
 #include "nodos.h"
 
 //funciones propias del puzzle
@@ -12,8 +11,7 @@ int *intercambiar(int n1, int n2, int estado[]);
 
 //funciones de busqueda
 int busquedaA_estrella(int estado[]);
-int buscarExplorados(Cola Explorados,int estado[]);
-int buscarFrontera(Cola frontera, int estado[]);
+int buscarNodo(Cola conjunto,int estado[]);
 
 //funciones para el manejo de las estructura de datos
 Arbol crearNodo(Arbol padre,movimiento accion, int estado[]);
@@ -30,8 +28,8 @@ int DistanciaManhattan(int estado[]);
 int fueraDeLugar(int estado[]);
 
 
-int cFrontera = 0;
-int cExplorados = 0;
+int nodosFrontera = 0;
+int nodosExplorados = 0;
 int nodosCreados = 0;
 
 int solucion[casillas] = {1,2,3,4,5,6,7,8,0};
@@ -39,11 +37,11 @@ int solucion[casillas] = {1,2,3,4,5,6,7,8,0};
 int main(void){
     //Estados con solucion
     //int estado[casillas] = {1,2,3,4,0,6,5,8,7};
-    //int estado[casillas] = {1,8,2,0,4,3,7,6,5};
+    int estado[casillas] = {1,8,2,0,4,3,7,6,5};
 
     //Estados sin solucion
     //int estado[casillas] = {5,1,8,0,2,3,4,6,7};
-    int estado[casillas] = {8,1,2,0,4,3,7,6,5};
+    //int estado[casillas] = {8,1,2,0,4,3,7,6,5};
 
     printf("\n8 puzzle - Busqueda por Amplitud\n\n");
     if(tieneSolucion(estado) == False){
@@ -288,7 +286,9 @@ int *moverPuzzle(int estado[], movimiento accion){
    }
 }
 
-
+/*funcion que recibe un estado, itera sobre ese estado hasta encontrar el 0, cuando lo encuentra
+regresa la posicion en la que se encuentra dentro del arreglo
+*/
 int buscarCero(int estado[]){
     int i;
     for(i = 0; i < casillas; i++){
@@ -297,6 +297,7 @@ int buscarCero(int estado[]){
     }
 }
 
+//funcion que intercambia dos elementos del estado
 int *intercambiar(int n1, int n2, int estado[]){
     int aux = estado[n1];
     estado[n1] = estado[n2];
@@ -304,12 +305,15 @@ int *intercambiar(int n1, int n2, int estado[]){
     return estado;
 }
 
+//funcion para crear un nodo a partir de un estado y una accion, sirve para crear el primer nodo y cualquier nodo siguiente
 Arbol crearNodo(Arbol padre,movimiento accion, int estado[]){
     Arbol nodo = NULL;
     int *temp;
     int temp2[casillas];
     int i;
+    //se reserva espacio para un nodo tipo arbol
     nodo = (Arbol)malloc(sizeof(tipoNodoArbol));
+    //esto se lleva a cabo para crear el nodo padre
     if(padre == NULL){
         for(i = 0; i < casillas; i++){
             temp2[i] = estado[i];
@@ -320,9 +324,10 @@ Arbol crearNodo(Arbol padre,movimiento accion, int estado[]){
         nodo->costo = 0; // es el padre
         return nodo;
     }
+    //esto se lleva a cabo para cualquier nodo
     for(i = 0; i < casillas; i++)
         temp2[i] = estado[i];
-
+    //obtenemos el nuevo puzzle generado a partir de el estado y el estado anterior
     temp = moverPuzzle(temp2, accion);
     for(i = 0; i < casillas; i++)
         nodo->estado[i] = temp[i];
@@ -343,6 +348,7 @@ int busquedaA_estrella(int estado[]){
     // estructuras auxiliares para implementar busqueda grafo
     Cola frontera = NULL;
     Cola Explorados = NULL;
+    Cola acciones = NULL;
     // se crea el primer nodo (Padre)
     nodo = crearNodo(NULL,izquierda,estado);
     // mostramos el estado inicial por pantalla
@@ -356,15 +362,16 @@ int busquedaA_estrella(int estado[]){
     }
     // ingresamos el nodo a la frontera
     PushFrontera(&frontera, nodo);
-
+    nodosFrontera++;
     do{
         if(frontera == NULL)
             return False;
         //sacamos un nodo de la frontera
         nodo = Pop(&frontera);
-
+        nodosFrontera--;
         //agregamos el nodo sacado de frontera al conjunto de explorados
         Push(&Explorados, nodo);
+        nodosExplorados++;
         // para cada acción creamos un hijo
         for(i = 0; i < 4; i++){
             if(i==0) m = arriba;
@@ -374,7 +381,8 @@ int busquedaA_estrella(int estado[]){
 
             hijo = crearNodo(nodo,m,nodo->estado);
             nodosCreados++;
-            if(buscarExplorados(Explorados,hijo->estado) == False && buscarFrontera(frontera,hijo->estado) == False){
+            if(buscarNodo(Explorados,hijo->estado) == False && buscarNodo(frontera,hijo->estado) == False){
+                //verificamos su el nodo hijo es una solucion
                 if(verificarEstado(hijo->estado,solucion) == True){
                     printf("\n-----------------------------------------------------------\n");
                     printf("\n Se ha encontrado una solucion\n");
@@ -382,12 +390,37 @@ int busquedaA_estrella(int estado[]){
                     //printf("\n frontera + explorados =  %d nodos\n", cFrontera + cExplorados);
                     printf("\n Se llego al nivel %d\n", hijo->costo);
                     printf("\n Se Crearon %d nodos\n", nodosCreados);
+                    //printf("\n Nodos en Frontera: %d\nNodos en Explorados: %d \n", nodosFrontera, nodosExplorados);
                     printf("\n-----------------------------------------------------------\n");
-                    imprimirEstado(hijo->estado);
+                    //ciclo para guardar en una estructura las acciones a partir del ultimo nodo (el cual es la solucion)
+                    while(hijo->padre != NULL){
+                        Push(&acciones, hijo);
+                        hijo = hijo->padre;
+                    }
+                    //ciclo para desplegar las acciones y estados que se utilizaron para llegar a la solucion
+                    while(acciones != NULL){
+                        hijo = Pop(&acciones);
+                        printf("\nHeuristica A* costo + heuristica: %d\n",hijo->h);
+                        printf("\nAccion: ");
+                        if(hijo->accion == izquierda){
+                            printf("izquierda\n");
+                        }
+                        if(hijo->accion == derecha){
+                            printf("derecha\n");
+                        }
+                        if(hijo->accion == arriba){
+                            printf("arriba\n");
+                        }
+                        if(hijo->accion == abajo){
+                            printf("abajo\n");
+                        }
+                        imprimirEstado(hijo->estado);
+                    }
                     return True;
                 }
                 else{
                     PushFrontera(&frontera,hijo);
+                    nodosFrontera++;
                 }
             }
         }
@@ -395,8 +428,9 @@ int busquedaA_estrella(int estado[]){
     return False;
 }
 
-int buscarExplorados(Cola Explorados, int estado[]){
-    Cola nodo = Explorados;
+//funcion es para buscar en un conjunto de nodos, ya sea Explorados o Frontera
+int buscarNodo(Cola conjunto, int estado[]){
+    Cola nodo = conjunto;
     if(nodo == NULL)
         return False;
     while(nodo){
@@ -408,19 +442,6 @@ int buscarExplorados(Cola Explorados, int estado[]){
     return False;
 }
 
-
-int buscarFrontera(Cola frontera, int estado[]){
-    Cola nodo = frontera;
-    if(nodo == NULL)
-        return False;
-    while(nodo){
-        if(verificarEstado(nodo->nArbol->estado,estado) == True){
-            return True;
-        }
-        nodo = nodo->siguiente;
-    }
-    return False;
-}
 
 //funcion para verificar si el estado inicial dado tiene solucion, recibe como parametro un arreglo entero (estado)
 int tieneSolucion(int estado[]){
